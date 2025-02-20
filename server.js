@@ -12,7 +12,7 @@ let participants;
 
 app.use(express.json());
 app.use(cors({
-    origin: '',
+    origin: 'https://shreynik00.github.io/QR-scanner-frontend/',
     credentials: true
 }));
 app.use(session({
