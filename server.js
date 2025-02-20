@@ -5,14 +5,14 @@ const cors = require('cors');
 
 const app = express();
 const port = 3000;
-const uri = 'mongodb+srv://Shreynik:Dinku2005@cluster0.xh7s8.mongodb.net/';
+const uri = 'mongodb://localhost:27017/';
 const client = new MongoClient(uri);
 let usersCollection;
 let participants;
 
 app.use(express.json());
 app.use(cors({
-    origin: 'https://askitindia.github.io',
+    origin: '',
     credentials: true
 }));
 app.use(session({
@@ -25,8 +25,8 @@ app.use(session({
 async function connectDB() {
     try {
         await client.connect();
-        usersCollection = client.db('Freelancer').collection('users');
-        participants = client.db('Freelancer').collection('participants');
+        usersCollection = client.db('Recyclebase').collection('user');
+        participants = client.db('Recyclebase').collection('participants');
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('MongoDB connection error:', error);
