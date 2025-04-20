@@ -2,7 +2,7 @@ const express = require('express');
 const { MongoClient } = require('mongodb');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
+
 const session = require('express-session');
 
 const app = express();
@@ -56,7 +56,7 @@ app.post('/register', async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        await usersCollection.insertOne({ username, email, password: hashedPassword });
+        await usersCollection.insertOne({ username, email, password});
 
         res.status(201).json({ message: 'User registered successfully.' });
     } catch (error) {
