@@ -149,7 +149,7 @@ app.get('/current-username', (req, res) => {
         } else {
             res.status(500).json({ message: 'Failed to update the task.' });
         }
-    } catch (error) {
+    catch (error) {
         console.error('Error marking task as completed:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
