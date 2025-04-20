@@ -9,61 +9,59 @@ const cors = require('cors');
 const app = express();
 const port = 3000;
 
-// Connection URI for MongoDB
+// Google OAuth client
 const clientt = new OAuth2Client("190022392096-gd9ehpmcvfonm496ip6p5ane43q4g4ce.apps.googleusercontent.com");
 
+// MongoDB connection URI
 const uri = 'mongodb://localhost:27017/';
 const client = new MongoClient(uri);
-let collection, usersCollection;
 
-// Middleware to parse JSON requests
+// MongoDB collections
+let usersCollection, profileInfosCollection;
+
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const cors = require('cors');
+// CORS setup
 app.use(cors({
     origin: 'https://shreynik00.github.io',
     credentials: true
 }));
 
-
-// Handle preflight requests
-app.options('*', cors());
+// Session middleware
 app.use(session({
-    secret: 'your-secret-key', // Replace with a secure secret
+    secret: 'your-secret-key', // Use a secure secret in production
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true } // Ensure secure cookies if using HTTPS
+    cookie: { secure: false, httpOnly: true }
 }));
 
-// Connect to MongoDB once at the start
+// Serve static files from public folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Connect to MongoDB
 async function connectDB() {
     try {
         await client.connect();
-        const database = client.db('ClothWebsite');
-      
-        usersCollection = database.collection('users'); // Users
-    
-    
+        const db = client.db('ClothWebsite');
+        usersCollection = db.collection('users');
+        profileInfosCollection = db.collection('profileInfos'); // ← Add this collection name
         console.log('Connected to MongoDB');
     } catch (error) {
         console.error('MongoDB connection error:', error);
-        process.exit(1);  // Exit the process if DB connection fails
+        process.exit(1);
     }
 }
 
 connectDB();
 
-
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Serve the main HTML file for user setup
+// Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// API to fetch current logged-in username from session
+// ✅ Get currently logged-in user
 app.get('/current-username', (req, res) => {
     try {
         if (req.session.user && req.session.user.username) {
@@ -71,31 +69,23 @@ app.get('/current-username', (req, res) => {
         } else {
             res.status(401).json({ message: 'User not logged in.' });
         }
-    // 👇 This is the correct place for closing try block
-    } 
-    catch (error) {
+    } catch (error) {
         console.error('Error fetching username:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
 
-
-
-// API to register a new user
+// ✅ Register a new user
 app.post('/register', async (req, res) => {
     const { username, password, email } = req.body;
 
     try {
-        // Check if user already exists
         const existingUser = await usersCollection.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already taken' });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Insert user into DB
         const newUser = { username, password: hashedPassword, email };
         await usersCollection.insertOne(newUser);
 
@@ -106,12 +96,10 @@ app.post('/register', async (req, res) => {
     }
 });
 
-
-
-
-// API to log in a user
+// ✅ Login user
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
+
     try {
         const user = await usersCollection.findOne({ username });
         if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -126,30 +114,28 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// API to fetch user details
-// API to fetch user details by username
-// API to fetch user details by username
+// ✅ Get user profile details
 app.get('/user/:username', async (req, res) => {
     const { username } = req.params;
+
     try {
-        const user = await profileInfosCollection.findOne({ username: username });
+        const user = await profileInfosCollection.findOne({ username });
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
-        res.json({ username: user.username, about: user.about, skills : user.skills });
+
+        res.json({
+            username: user.username,
+            about: user.about || '',
+            skills: user.skills || []
+        });
     } catch (error) {
         console.error('Error fetching user details:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
 
-
-
-
-
-
-
-// Start the server
+// Start server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
