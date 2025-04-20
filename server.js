@@ -20,11 +20,10 @@ let collection, usersCollection;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const cors = require('cors');
 app.use(cors({
-    origin: 'https://shreynik00.github.io/ClothingWebsite/',  // Allow your GitHub Pages site
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow specific HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Allow specific headers
-    credentials: true  // Allow credentials if needed
+    origin: 'https://shreynik00.github.io',
+    credentials: true
 }));
 
 
@@ -147,7 +146,30 @@ app.get('/current-username', (req, res) => {
 
 
 
+// API to register a new user
+app.post('/register', async (req, res) => {
+    const { username, password, email } = req.body;
 
+    try {
+        // Check if user already exists
+        const existingUser = await usersCollection.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already taken' });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insert user into DB
+        const newUser = { username, password: hashedPassword, email };
+        await usersCollection.insertOne(newUser);
+
+        res.json({ message: 'User registered successfully', user: { username, email } });
+    } catch (error) {
+        console.error('Error registering user:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 
 
