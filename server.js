@@ -65,12 +65,14 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// LOGIN
+// LOGIN (without bcrypt)
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await usersCollection.findOne({ username });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
+
+        // Compare plain-text passwords directly
+        if (!user || user.password !== password) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
