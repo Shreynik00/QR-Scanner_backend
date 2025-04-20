@@ -131,26 +131,16 @@ app.get('/', (req, res) => {
 
 // API to fetch current logged-in username from session
 app.get('/current-username', (req, res) => {
-    if (req.session.user && req.session.user.username) {
-        res.json({ username: req.session.user.username });
-    } else {
-        res.status(401).json({ message: 'User not logged in.' });
-    }
-});
-
-
-
-        if (updateResult.matchedCount === 0) {
-            return res.status(404).json({ message: 'Task not found.' });
-        }
-
-        if (updateResult.modifiedCount === 1) {
-            res.json({ message: 'Task marked as completed successfully.' });
+    try {
+        if (req.session.user && req.session.user.username) {
+            res.json({ username: req.session.user.username });
         } else {
-            res.status(500).json({ message: 'Failed to update the task.' });
+            res.status(401).json({ message: 'User not logged in.' });
         }
+    // 👇 This is the correct place for closing try block
+    } 
     catch (error) {
-        console.error('Error marking task as completed:', error);
+        console.error('Error fetching username:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 });
@@ -159,15 +149,6 @@ app.get('/current-username', (req, res) => {
 
 
 
-
-// API to fetch current logged-in username from session
-app.get('/current-username', (req, res) => {
-    if (req.session.user && req.session.user.username) {
-        res.json({ username: req.session.user.username });
-    } else {
-        res.status(401).json({ message: 'User not logged in.' });
-    }
-});
 
 
 
