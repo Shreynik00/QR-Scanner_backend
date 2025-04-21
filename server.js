@@ -24,7 +24,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-let usersCollection;
+let usersCollection,paymentCollection;
 
 // Connect to MongoDB
 async function connectToDatabase() {
@@ -33,6 +33,7 @@ async function connectToDatabase() {
         console.log("Connected to MongoDB");
         const db = client.db('Freelancer');
         usersCollection = db.collection('userC');
+         paymentCollection = db.collection('payment');
     } catch (err) {
         console.error("Error connecting to database:", err);
     }
@@ -64,6 +65,74 @@ app.post('/register', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+
+app.post('/payment', async (req, res) => {
+  const {
+    productId,
+    quantity,
+    totalAmount,
+    paymentMethod,
+    address,
+    upiId,
+    cardNumber,
+    cardholderName,
+    cvv,
+    bankName,
+    accountHolderName
+  } = req.body;
+
+  try {
+    // Check required fields for all payments
+    if (!productId || !quantity || !totalAmount || !paymentMethod) {
+      return res.status(400).json({ message: 'Missing basic payment details.' });
+    }
+
+    // Conditional validation based on payment method
+    if (paymentMethod === 'Cash on Delivery') {
+      if (!address) {
+        return res.status(400).json({ message: 'Address is required for Cash on Delivery.' });
+      }
+    } else if (paymentMethod === 'UPI') {
+      if (!upiId) {
+        return res.status(400).json({ message: 'UPI ID is required for UPI payment.' });
+      }
+    } else if (paymentMethod === 'Credit Card') {
+      if (!cardNumber || !cardholderName || !cvv) {
+        return res.status(400).json({ message: 'Card Number, Cardholder Name, and CVV are required for Credit Card payment.' });
+      }
+    } else if (paymentMethod === 'Net Banking') {
+      if (!bankName || !accountHolderName) {
+        return res.status(400).json({ message: 'Bank Name and Account Holder Name are required for Net Banking.' });
+      }
+    }
+
+    // Save everything that was sent
+    const paymentRecord = {
+      productId,
+      quantity,
+      totalAmount,
+      paymentMethod,
+      address: address || null,
+      upiId: upiId || null,
+      cardNumber: cardNumber || null,
+      cardholderName: cardholderName || null,
+      cvv: cvv || null,
+      bankName: bankName || null,
+      accountHolderName: accountHolderName || null,
+      timestamp: new Date()
+    };
+
+ await paymentCollection.insertOne(paymentRecord);
+
+
+    res.status(201).json({ message: 'Payment recorded successfully.' });
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 // LOGIN (without bcrypt)
 app.post('/login', async (req, res) => {
