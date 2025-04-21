@@ -105,7 +105,7 @@ app.post('/payment', async (req, res) => {
       if (!address) {
         return res.status(400).json({ message: 'Address is required for Cash on Delivery.' });
       }
-    } else if (paymentMethod === 'UPI') {
+    } else if (paymentMethod === 'Online') {
       if (!upiId) {
         return res.status(400).json({ message: 'UPI ID is required for UPI payment.' });
       }
