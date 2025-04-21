@@ -67,6 +67,18 @@ app.post('/register', async (req, res) => {
 });
 
 
+// GET all payment records
+app.get('/payments', async (req, res) => {
+  try {
+    const allPayments = await paymentCollection.find().toArray();
+    res.status(200).json(allPayments);
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 app.post('/payment', async (req, res) => {
   const {
     productId,
